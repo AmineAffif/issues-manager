@@ -9,3 +9,34 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id             Int     @id @default(autoincrement())
+  name           String  @db.VarChar(255)
+  email          String  @db.VarChar(255) @unique
+  authoredIssues Issue[] @relation("IssueAuthor")
+  assignedIssues Issue[] @relation("IssueAssignee")
+}
+
+model Issue {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  status      Status   @default(OPEN)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  closedAt    DateTime?
+  author      User     @relation(name: "IssueAuthor", fields: [authorId], references: [id], map: "IssueAuthorFK")
+  authorId    Int
+  assignee    User?    @relation(name: "IssueAssignee", fields: [assigneeId], references: [id], map: "IssueAssigneeFK")
+  assigneeId  Int?
+
+  @@index([authorId], name: "authorId")
+  @@index([assigneeId], name: "assigneeId")
+}
+
+enum Status {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
